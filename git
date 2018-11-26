@@ -1,0 +1,40 @@
+# Git PS1 configuration
+
+get_dir() {
+  printf "%s" $(pwd | sed "s:$HOME:~:")
+}
+
+if [ -z $(type -t update_terminal_cwd) ]; then
+  function update_terminal_cwd {
+    echo "" >/dev/null
+  }
+fi
+
+rename_tab() {
+  if [ -n $(type -t update_terminal_cwd) ]; then
+    echo -ne "\033]0;"$@"\007"
+    update_terminal_cwd
+  fi
+}
+
+rename_tab_git_branch() {
+  branch=$(__git_ps1)
+  if [ "$branch" != "" ]; then
+    rename_tab "$(basename $(pwd)) $branch"
+  else
+    rename_tab $(get_dir)
+  fi
+}
+
+stat() {
+  git status -sb $@
+}
+
+export GIT_PS1_SHOWDIRTYSTATE=1
+export GIT_PS1_SHOWSTASHSTATE=1
+export GIT_PS1_SHOWUNTRACKEDFILES=1
+export GIT_PS1_SHOWCOLORHINTS=1
+export GIT_PS1_DESCRIBE_STYLE="branch"
+export GIT_PS1_SHOWUPSTREAM="auto git"
+
+export PROMPT_COMMAND='rename_tab_git_branch;'

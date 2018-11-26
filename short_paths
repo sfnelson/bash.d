@@ -1,0 +1,38 @@
+# Nice short paths for PS1, relies on __git_ps1
+
+# set this to whatever you want:
+MAX_PWD_LENGTH=20
+
+function shorten_pwd
+{
+    # This function ensures that the PWD string does not exceed $MAX_PWD_LENGTH characters
+    PWD=$(pwd)
+
+    # if truncated, replace truncated part with this string:
+    REPLACE="/.."
+
+    # determine part of path within HOME, or entire path if not in HOME
+    RESIDUAL=${PWD#$HOME}
+
+    # compare RESIDUAL with PWD to determine whether we are in HOME or not
+    if [ X"$RESIDUAL" != X"$PWD" ]
+    then
+        PREFIX="~"
+    fi
+
+    # check if residual path needs truncating to keep total length below MAX_PWD_LENGTH
+    # compensate for replacement string.
+    TRUNC_LENGTH=$(($MAX_PWD_LENGTH - ${#PREFIX} - ${#REPLACE} - 1))
+    NORMAL=${PREFIX}${RESIDUAL}
+    if [ ${#NORMAL} -ge $(($MAX_PWD_LENGTH)) ]
+    then
+        newPWD=${PREFIX}${REPLACE}${RESIDUAL:((${#RESIDUAL} - $TRUNC_LENGTH)):$TRUNC_LENGTH}
+    else
+        newPWD=${PREFIX}${RESIDUAL}
+    fi
+
+    # return to caller
+    echo $newPWD
+}
+
+PS1='\h:$(shorten_pwd)\[\033[32m\]$(__git_ps1)\[\033[00m\] \$ '
